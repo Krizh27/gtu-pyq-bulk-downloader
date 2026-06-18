@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Atlas - GTU PYQ Downloader</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --primary: #38bdf8;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --error: #f87171;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --radius: 12px;
+            --transition: all 0.2s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 0.5rem; }
+        h2 { margin-bottom: 1.5rem; color: var(--text); font-size: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        h3 { color: var(--primary); margin-bottom: 0.5rem; font-size: 1.1rem; }
+
+        /* Search Box */
+        .search-container {
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+        #searchInput:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
+
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Flow Diagrams (CSS Grid/Flexbox approach) */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .flow-node {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .flow-arrow { color: var(--text-muted); font-weight: bold; }
+
+        /* Interactive Lifecycle */
+        .lifecycle-container { display: flex; flex-direction: column; gap: 1rem; }
+        .step-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .step-header {
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .step-header:hover { background: var(--surface-hover); }
+        .step-details {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background: rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+        .step-card.active .step-header { background: rgba(56, 189, 248, 0.1); color: var(--primary); border-bottom: 1px solid var(--border); }
+        .step-card.active .step-details { padding: 1.5rem; max-height: 500px; }
+        .detail-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; }
+        .detail-label { color: var(--text-muted); font-weight: 600; text-align: right; }
+        .detail-value { color: var(--text); font-family: monospace; background: var(--bg); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); display: inline-block; }
+
+        /* Grid layouts for cards */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        
+        .explorer-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+        .explorer-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(56, 189, 248, 0.1); }
+        .explorer-card h3 { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 0; }
+        .explorer-card h3::after { content: '▼'; font-size: 0.8rem; transition: transform 0.2s; }
+        .explorer-card.expanded h3 { margin-bottom: 1rem; }
+        .explorer-card.expanded h3::after { transform: rotate(180deg); }
+        
+        .card-content { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); font-size: 0.9rem;}
+        .explorer-card.expanded .card-content { display: block; }
+
+        /* Object Trees */
+        .tree ul { list-style-type: none; padding-left: 1.5rem; border-left: 1px solid var(--border); margin-top: 0.5rem; }
+        .tree li { position: relative; margin: 0.5rem 0; font-family: monospace; }
+        .tree li::before { content: ''; position: absolute; top: 12px; left: -1.5rem; width: 1rem; border-top: 1px solid var(--border); }
+        .type-string { color: #86efac; }
+        .type-number { color: #fca5a5; }
+        .type-array { color: #fdba74; }
+
+        /* Error Cards */
+        .error-card { border-left: 4px solid var(--error); }
+        .error-path { font-size: 0.85rem; background: rgba(220, 38, 38, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .section { padding: 1.5rem; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-label { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Code Atlas</h1>
+        <p style="color: var(--text-muted)">Interactive Visual Learning Companion for GTU PYQ Downloader</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search variables, files, flows, objects...">
+    </div>
+
+    <!-- A. Project Overview -->
+    <div class="section searchable" data-search="overview frontend backend server download">
+        <h2>A. Project Overview</h2>
+        <div class="flow-diagram">
+            <div class="flow-node" style="border-color: #fcd34d;">👤 User</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color: #38bdf8;">💻 Frontend (React/Vite)</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color: #4ade80;">⚙️ Backend (Express/Node)</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color: #fb7185;">🌐 GTU Web Server</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color: #c084fc;">📦 ZIP Download</div>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+            The frontend captures input and talks to the backend logic engine. The backend validates and computes candidate URLs without downloading anything. The frontend then orchestrates the actual PDF fetching directly from GTU and zips them in-browser.
+        </p>
+    </div>
+
+    <!-- B. Request Lifecycle -->
+    <div class="section searchable" id="lifecycle-section" data-search="lifecycle request api post express validation route">
+        <h2>B. Request Lifecycle</h2>
+        <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-muted);">Click on a step to see exactly what executes at that moment.</p>
+        <div class="lifecycle-container" id="lifecycle-container">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- C. Variable Explorer -->
+    <div class="section searchable" id="variable-section" data-search="variables state props parameters data">
+        <h2>C. Variable Explorer</h2>
+        <div class="card-grid" id="variable-container">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- D. File Relationship Explorer -->
+    <div class="section searchable" id="file-section" data-search="files relationships imports exports structure">
+        <h2>D. File Relationship Explorer</h2>
+        <div class="flow-diagram" style="flex-direction: column; align-items: flex-start;">
+            <div class="flow-diagram" style="background:transparent; padding:0; border:none; margin-bottom: 1rem;">
+                <div class="flow-node" style="border-color: #38bdf8">frontend/src/pages/download.jsx</div>
+                <div class="flow-arrow">imports</div>
+                <div class="flow-node" style="border-color: #38bdf8">generated/api.js (React Query hooks)</div>
+                <div class="flow-arrow">uses</div>
+                <div class="flow-node" style="border-color: #38bdf8">custom-fetch.js</div>
+            </div>
+            <div class="flow-arrow" style="margin-left: 2rem;">↓ HTTP POST /api/pyq/check</div>
+            <div class="flow-diagram" style="background:transparent; padding:0; border:none; margin-top: 1rem;">
+                <div class="flow-node" style="border-color: #4ade80">backend/src/index.js</div>
+                <div class="flow-arrow">mounts</div>
+                <div class="flow-node" style="border-color: #4ade80">app.js</div>
+                <div class="flow-arrow">routes to</div>
+                <div class="flow-node" style="border-color: #4ade80">routes/pyq/index.js</div>
+                <div class="flow-arrow">imports</div>
+                <div class="flow-node" style="border-color: #4ade80">api/generated/api.js (Zod Schema)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- E. Object Shape Explorer -->
+    <div class="section searchable" id="object-section" data-search="objects shapes types interfaces payload response">
+        <h2>E. Object Shape Explorer</h2>
+        <div class="card-grid" id="object-container">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <!-- F. Error Flow Explorer -->
+    <div class="section searchable" id="error-section" data-search="errors bugs exceptions catch try network cors">
+        <h2>F. Error Flow Explorer</h2>
+        <div class="card-grid" id="error-container">
+            <!-- Populated via JS -->
+        </div>
+    </div>
+
+    <script>
+        // --- Data Definitions ---
+
+        const lifecycleData = [
+            { title: "1. User Input", file: "download.jsx", func: "Browser UI", input: "User clicks Get Links", output: "Form Submit Event", notes: "react-hook-form intercepts the standard HTML form submission." },
+            { title: "2. handleSubmit", file: "download.jsx", func: "onCheck(values)", input: "Raw Form Values", output: "Cleaned Variables", notes: "Extracts values, trims whitespace, formats session array [S, W]." },
+            { title: "3. useCheckPyq()", file: "generated/api.js", func: "useCheckPyq.mutate()", input: "Formatted JSON Object", output: "Triggers React Query", notes: "React Query takes over state management (isPending=true)." },
+            { title: "4. customFetch()", file: "custom-fetch.js", func: "customFetch('/api/pyq/check')", input: "JSON Body, POST Method", output: "HTTP Network Request", notes: "Attaches correct headers and standardizes error throwing." },
+            { title: "5. POST /api/pyq/check", file: "backend/src/app.js", func: "app.use('/api', router)", input: "Raw HTTP Stream", output: "Express Request Object", notes: "express.json() middleware parses the stream into req.body." },
+            { title: "6. Express Route", file: "routes/pyq/index.js", func: "router.post()", input: "req, res", output: "Route Handler Execution", notes: "The specific endpoint logic begins." },
+            { title: "7. Validation", file: "api/generated/api.js", func: "CheckPyqBody.safeParse()", input: "req.body (Unknown Shape)", output: "parsed.data (Strict Shape)", notes: "Zod guarantees the data is exactly what the backend expects. Prevents crashes." },
+            { title: "8. generateUrls()", file: "routes/pyq/index.js", func: "generateUrls()", input: "subjectCode, course, years", output: "Array of Strings", notes: "Pure mathematical permutations. No network calls are made here." },
+            { title: "9. Response", file: "routes/pyq/index.js", func: "res.json()", input: "CheckPyqResponse Object", output: "HTTP 200 OK JSON", notes: "Data is serialized and sent back across the network." },
+            { title: "10. UI Update", file: "download.jsx", func: "onSuccess callback", input: "JSON Response", output: "setPapers(mappedData)", notes: "React Query completes, UI re-renders with the list of paper links." }
+        ];
+
+        const variablesData = [
+            { name: "subjectCode", flow: ["Origin: User Input Box", "Transform: trim() in onCheck", "Usage: Transmitted in req.body.subjectCode", "Usage: generateUrls() interpolates into string", "Output: URL string -> makeFilename()"] },
+            { name: "papers", flow: ["Origin: useState([]) in download.jsx", "Transform: Mapped from API response in onSuccess", "Usage: Rendered via map() into UI list items", "Usage: Iterated during handleDownload() loop", "Output: State mutations track zip progress"] },
+            { name: "req.body", flow: ["Origin: express.json() parser", "Transform: Zod safeParse() validation", "Usage: Destructured into variables", "Output: Garbage collected after route completes"] },
+            { name: "response", flow: ["Origin: customFetch returns Promise", "Transform: JSON.parse()", "Usage: React Query places in 'data' cache", "Output: Passed to onSuccess callback"] }
+        ];
+
+        const objectsData = [
+            { 
+                name: "req.body (CheckPyqBody)", 
+                desc: "Data sent from Frontend to Backend",
+                shape: [
+                    { name: "subjectCode", type: "string" },
+                    { name: "course", type: "string" },
+                    { name: "startYear", type: "number" },
+                    { name: "endYear", type: "number" },
+                    { name: "sessions", type: "array[string]" }
+                ]
+            },
+            { 
+                name: "response (CheckPyqResponse)", 
+                desc: "Data sent from Backend to Frontend",
+                shape: [
+                    { name: "availableUrls", type: "array[string]" },
+                    { name: "totalFound", type: "number" },
+                    { name: "checkedUrls", type: "number" }
+                ]
+            },
+            { 
+                name: "Paper State Object", 
+                desc: "Internal Frontend State (papers array element)",
+                shape: [
+                    { name: "url", type: "string" },
+                    { name: "label", type: "string" },
+                    { name: "filename", type: "string" },
+                    { name: "status", type: "string ('pending'|'downloading'|'done'|'failed')" }
+                ]
+            }
+        ];
+
+        const errorsData = [
+            { title: "Validation Error", desc: "User inputs startYear > endYear.", path: "User Input → React Hook Form → UI shows red text. (Backend never contacted)" },
+            { title: "Network Error", desc: "Backend server process is dead.", path: "customFetch() fetch fails → throws ApiError → React Query onError → Toast shows 'Failed to fetch'" },
+            { title: "GTU CORS Block", desc: "Browser security blocks cross-origin download.", path: "fetch(PDF) → throws TypeError → catch block sets status='failed' → corsBlocked state set true → UI shows amber warning box" },
+            { title: "Server Error", desc: "Backend throws an unhandled exception.", path: "Express crashes → 500 status returned → customFetch parses error body → throws ApiError → Toast shows error details" }
+        ];
+
+        // --- Render Logic ---
+
+        // Render Lifecycle
+        const lcContainer = document.getElementById('lifecycle-container');
+        lifecycleData.forEach((step, index) => {
+            const card = document.createElement('div');
+            card.className = 'step-card';
+            card.innerHTML = `
+                <div class="step-header">
+                    <span>${step.title}</span>
+                    <span style="font-size: 0.8em; color: var(--text-muted)">+</span>
+                </div>
+                <div class="step-details">
+                    <div class="detail-grid">
+                        <div class="detail-label">File:</div><div class="detail-value">${step.file}</div>
+                        <div class="detail-label">Function:</div><div class="detail-value">${step.func}</div>
+                        <div class="detail-label">Input:</div><div class="detail-value">${step.input}</div>
+                        <div class="detail-label">Output:</div><div class="detail-value">${step.output}</div>
+                        <div class="detail-label">Notes:</div><div style="font-size: 0.9em">${step.notes}</div>
+                    </div>
+                </div>
+            `;
+            card.querySelector('.step-header').addEventListener('click', () => {
+                const isActive = card.classList.contains('active');
+                document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
+                if (!isActive) card.classList.add('active');
+            });
+            lcContainer.appendChild(card);
+        });
+
+        // Render Variables
+        const varContainer = document.getElementById('variable-container');
+        variablesData.forEach(v => {
+            const card = document.createElement('div');
+            card.className = 'explorer-card';
+            const flowHtml = v.flow.map((f, i) => i === 0 ? `<div class="flow-node">${f}</div>` : `<div class="flow-arrow" style="text-align:center; margin:0.2rem 0">↓</div><div class="flow-node">${f}</div>`).join('');
+            card.innerHTML = `
+                <h3>${v.name}</h3>
+                <div class="card-content">
+                    <div style="display: flex; flex-direction: column;">
+                        ${flowHtml}
+                    </div>
+                </div>
+            `;
+            card.querySelector('h3').addEventListener('click', () => card.classList.toggle('expanded'));
+            varContainer.appendChild(card);
+        });
+
+        // Render Objects
+        const objContainer = document.getElementById('object-container');
+        objectsData.forEach(obj => {
+            const card = document.createElement('div');
+            card.className = 'explorer-card';
+            const shapeHtml = obj.shape.map(s => `<li>${s.name}: <span class="type-${s.type.split('[')[0]}">${s.type}</span></li>`).join('');
+            card.innerHTML = `
+                <h3>${obj.name}</h3>
+                <div class="card-content">
+                    <p style="color: var(--text-muted); margin-bottom: 0.5rem">${obj.desc}</p>
+                    <div class="tree">
+                        <ul>${shapeHtml}</ul>
+                    </div>
+                </div>
+            `;
+            card.querySelector('h3').addEventListener('click', () => card.classList.toggle('expanded'));
+            objContainer.appendChild(card);
+        });
+
+        // Render Errors
+        const errContainer = document.getElementById('error-container');
+        errorsData.forEach(err => {
+            const card = document.createElement('div');
+            card.className = 'explorer-card error-card';
+            card.innerHTML = `
+                <h3>${err.title}</h3>
+                <div class="card-content" style="display: block;">
+                    <p>${err.desc}</p>
+                    <div class="error-path">${err.path}</div>
+                </div>
+            `;
+            // Keep error cards expanded by default
+            errContainer.appendChild(card);
+        });
+
+        // --- Search Logic ---
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.searchable').forEach(section => {
+                const searchData = (section.getAttribute('data-search') + " " + section.innerText).toLowerCase();
+                if (searchData.includes(term)) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+            
+            // Highlight specific cards if searching deep
+            if (term.length > 2) {
+                document.querySelectorAll('.explorer-card, .step-card').forEach(card => {
+                    if (card.innerText.toLowerCase().includes(term)) {
+                        if(card.classList.contains('explorer-card')) card.classList.add('expanded');
+                        if(card.classList.contains('step-card')) card.classList.add('active');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -24,11 +24,10 @@ Contains all the custom source code for the browser application.
 ## 3. `/backend`
 This folder contains the Node.js / Express server. It runs on port `8080`.
 - `package.json`: Lists the backend dependencies (like Express, Pino, Zod).
-- `openapi.yaml`: A specification file defining exactly what the API endpoints look like and what data they expect.
 
 ### `/backend/src`
 Contains all the logic for the API server.
-- **`/api`**: Contains the Zod schemas used to validate incoming JSON requests against the `openapi.yaml` rules.
+- **`/api`**: Contains the Zod schemas used to validate incoming JSON requests against strict type structures.
 - **`/lib`**: General utilities (like the `logger.js` configuration).
 - **`/routes`**: Contains the actual API endpoints that respond to frontend requests.
   - `health.js`: A simple endpoint returning `{ status: "ok" }` to verify the server is alive.

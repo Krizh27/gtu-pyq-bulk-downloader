@@ -1,24 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>GTU PYQ Bulk Downloader</title>
-    <meta name="description" content="GTU PYQ Bulk Downloader — built on Replit. Update this description to reflect the app." />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="GTU PYQ Bulk Downloader" />
-    <meta property="og:description" content="GTU PYQ Bulk Downloader — built on Replit. Update this description to reflect the app." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GTU PYQ Bulk Downloader" />
-    <meta name="twitter:description" content="GTU PYQ Bulk Downloader — built on Replit. Update this description to reflect the app." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTU PYQ Downloader</title>
+    <!-- We load JSZip from CDN to handle building the zip file without a bundler -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GTU PYQ Downloader</h1>
+            <p>Directly fetch and bundle Previous Year Questions from GTU servers.</p>
+        </header>
+
+        <main>
+            <section class="card form-section">
+                <form id="pyqForm">
+                    <div class="form-group">
+                        <label for="subjectCode">Subject Code</label>
+                        <input type="text" id="subjectCode" placeholder="e.g. 3150703" required minlength="4" maxlength="15">
+                        <small class="error-msg" id="subjectCodeError"></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="course">Course</label>
+                        <select id="course" required>
+                            <option value="BE">BE</option>
+                            <option value="ME">ME</option>
+                            <option value="BCA">BCA</option>
+                            <option value="MCA">MCA</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="B.Pharm">B.Pharm</option>
+                            <option value="MBA">MBA</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startYear">Start Year</label>
+                            <select id="startYear" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="endYear">End Year</label>
+                            <select id="endYear" required></select>
+                        </div>
+                    </div>
+                    <small class="error-msg" id="yearError"></small>
+
+                    <div class="form-group">
+                        <label>Session</label>
+                        <div class="button-group" id="sessionGroup">
+                            <button type="button" class="toggle-btn" data-value="S">Summer</button>
+                            <button type="button" class="toggle-btn" data-value="W">Winter</button>
+                            <button type="button" class="toggle-btn active" data-value="SW">Both</button>
+                        </div>
+                        <!-- Hidden input to store the active session selection for easy form retrieval -->
+                        <input type="hidden" id="sessionMode" value="SW">
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="primary-btn">Get Paper Links</button>
+                </form>
+            </section>
+
+            <section class="card results-section hidden" id="resultsSection">
+                <div class="results-header">
+                    <div class="status-text">
+                        <h3 id="resultTitle">0 papers found</h3>
+                        <p id="resultSubtitle">Your browser will fetch papers directly from GTU</p>
+                    </div>
+                    <button id="downloadBtn" class="primary-btn download-btn">Download ZIP</button>
+                </div>
+
+                <div class="cors-warning hidden" id="corsWarning">
+                    <strong>GTU restricts cross-origin downloads.</strong> Click each paper link below to open and save it directly from GTU.
+                </div>
+
+                <ul class="paper-list" id="paperList">
+                    <!-- Paper items will be injected here via JavaScript -->
+                </ul>
+                
+                <div class="legend hidden" id="legend">
+                    <span id="successCount" class="success-text hidden">0 downloaded</span>
+                    <span id="failCount" class="error-text hidden">0 not on GTU</span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- The main application logic -->
+    <script src="app.js"></script>
+</body>
 </html>

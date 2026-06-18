@@ -1,36 +1,26 @@
 # System Architecture
 
-The GTU PYQ Downloader is a simplified, modern JavaScript application divided into two distinct parts: a **React Frontend** and an **Express Backend**.
+The GTU PYQ Downloader has been completely rewritten to use standard, vanilla web technologies. This architecture is designed for extreme simplicity, maximizing learning potential for students studying full-stack development.
 
-## High-Level Diagram
+## The "Single Server" Model
 
-```mermaid
-graph TD
-    User([User / Browser]) -->|Loads UI| Frontend(Vite React Frontend)
-    User -->|Submits PYQ Form| Frontend
-    
-    Frontend -->|POST /api/pyq/check| Backend(Express Backend)
-    Backend -->|Validates Input| Backend
-    Backend -->|Generates URLs| Backend
-    Backend -->|Returns Candidate URLs| Frontend
-    
-    Frontend -->|Fetch PDF 1| GTU(GTU Web Server)
-    Frontend -->|Fetch PDF 2| GTU
-    
-    GTU -->|PDF Blobs| Frontend
-    Frontend -->|JSZip creates ZIP| BrowserDownload([User Downloads ZIP])
-```
+Unlike modern web applications that separate the frontend (e.g., a React/Vite development server on port 5173) from the backend (an Express server on port 8080), this application runs everything on a single Node.js instance.
 
-## Architecture Principles
+### Component Breakdown
 
-1. **Decoupled Architecture**: 
-   The frontend and backend live in completely separate directories (`/frontend` and `/backend`). They run on different ports and are connected only by the `/api/` network boundary.
-   
-2. **Client-Side Heavy Lifting (Edge Compute)**: 
-   The backend does *not* download PDFs or generate ZIP files. This prevents the backend server from running out of bandwidth or memory. Instead, the backend purely acts as a logic-engine to compute URL permutations. The frontend browser does the heavy lifting of fetching PDFs from GTU and zipping them locally using `JSZip`.
+1. **Frontend (Static Files)**
+   - `frontend/index.html`: The structural foundation of the UI.
+   - `frontend/style.css`: All visual styling.
+   - `frontend/app.js`: All client-side logic (DOM manipulation, fetching, zipping).
+   - *Note*: These files are pure and do not require compilation or bundling.
 
-3. **Stateless Backend**:
-   The backend does not use a database (`lib/db` was removed). It doesn't save user sessions or generated papers. Every request is isolated.
+2. **Backend (Express)**
+   - The backend server (`backend/src/index.js`) listens on port 8080.
+   - It is configured using `express.static()` to directly serve the `frontend/` directory. When you visit `http://localhost:8080`, Express automatically returns `index.html`.
+   - It also hosts an API endpoint at `/api/pyq/check` which the frontend talks to via `fetch()`.
 
-4. **Pure JavaScript**:
-   TypeScript has been removed. The application relies entirely on modern JavaScript (ES Modules, JSX, `fetch`) and leverages JSDoc for lightweight developer intelligence without compile steps.
+### Benefits for Learning
+
+- **No CORS**: Because the frontend is served from the exact same origin (`localhost:8080`) as the API, Cross-Origin Resource Sharing (CORS) errors are impossible.
+- **No Bundlers**: You can edit `app.js` or `style.css`, refresh the page, and instantly see changes. No waiting for Webpack or Vite to recompile.
+- **Native APIs**: You learn exactly how the native browser `fetch` API and native JavaScript DOM APIs work without React abstracting them away.

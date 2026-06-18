@@ -1,11 +1,15 @@
 import { Router } from "express";
-import { HealthCheckResponse } from "../api/index.js";
 
 const router = Router();
 
+/**
+ * Purpose: API Endpoint handler for GET /api/healthz
+ * Input: None
+ * Output: { status: "ok" }
+ * Example: GET /api/healthz -> Responds with 200 OK and JSON { status: "ok" }
+ */
 router.get("/healthz", (_req, res) => {
-  const data = HealthCheckResponse.parse({ status: "ok" });
-  res.json(data);
+  res.json({ status: "ok" });
 });
 
 export default router;

@@ -1,13 +1,11 @@
 import app from "./app.js";
-import { logger } from "./lib/logger.js";
 
 const port = Number(process.env["PORT"]) || 8080;
 
 app.listen(port, (err) => {
   if (err) {
-    logger.error({ err }, "Error listening on port");
+    console.error("Error listening on port", err);
     process.exit(1);
   }
-
-  logger.info({ port }, "Server listening");
+  console.log(`Server listening on http://localhost:${port}`);
 });
