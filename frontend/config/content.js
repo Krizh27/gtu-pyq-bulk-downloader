@@ -127,7 +127,7 @@ const CONTENT = {
         // Default media shown when no per-label override exists
         default: {
             type: "image",
-            url: "frontend\WhatsApp Image 2026-06-10 at 12.29.54 PM.jpeg"
+            url: "homelander-im-better.gif"
         },
 
         // Overrides: use the exact label string (as rendered) to target a specific paper
