@@ -32,11 +32,30 @@ const CONTENT = {
     // ROTATING BANNERS
     // These scroll at the top of the screen
     // ----------------------------------------------------
+    bannerSpeed: 4, // Speed of the scrolling meme banner (default: 12, higher is faster)
     banners: [
         "Kal se pakka padhunga.",
         "Ye last reel hai, iske baad seedha syllabus complete.",
-        "Paper mil jayega. Confidence nahi.",
-        "GTU: Where hope comes to die, but passing marks survive."
+        "9:00 baje ka plan tha 9:13 hogai ab shubh muhrat gaya",
+        "tere pass to zameen hai , kyu tension leraha",
+        "baap ki dukan hai to sahi",
+        "bhai uski to shaddi hojayegi tera kya hoga?",
+        "reel dekhne se ghar nhi chalta",
+        "ab ye line he padhta rahega kya",
+        "jo padhna hai wo padh",
+        "chal bhai light bandh kar dusro ko sone de",
+        "tere to attendence bhi kum hai laadle",
+        "darna mat bhai me baitha hu (ghar pe)",
+        "whatsapp group mat kholna sab padhke aye hai distract karne",
+        "tu kaha meri baat manega khol le whatsapp",
+        "uski story pe like to karde padhne se pehele",
+        "Alooo Leelooo ye yaad karle future me kaam ayega",
+        "hall ticket ki xerox karvai?",
+        "tu sale pen kharid pehele kal likhega kaise?",
+        "pani ki bottle leke jaa bhai dusre ki khali karne me kya maza ata hai?",
+        "tere to internal marks bhi kum hai",
+        "8hr ki nind lele bhai ab kuch nhi hosakta",
+        "subhe uthke dekhlena ab"
     ],
 
     // ----------------------------------------------------
@@ -44,47 +63,51 @@ const CONTENT = {
     // ----------------------------------------------------
     // Change this mock date to test different panic states (Format: YYYY-MM-DD)
     // Exam date is set dynamically in the app based on this config
-    examDate: "2026-05-15",
+    examDate: "2026-08-11",
 
     panicLevels: {
         relaxed: {
             color: "#4ade80", // Green
-            label: "[ PANIC LEVEL: CHILL ]"
+            label: "[ PANIC LEVEL: CHILL ]",
+            media: "/assets/memes/cr7_meme.gif"
         },
         warning: {
             color: "#facc15", // Yellow
-            label: "[ PANIC LEVEL: AWARENESS ]"
+            label: "[ PANIC LEVEL: AWARENESS ]",
+            media: "/assets/memes/jack-oggy-juice-kahan-gaya.gif"
         },
         panic: {
             color: "#f97316", // Orange
-            label: "[ PANIC LEVEL: PANIC ]"
+            label: "[ PANIC LEVEL: PANIC ]",
+            media: "/assets/memes/abhijeet-cid-meme.gif"
         },
         critical: {
             color: "#ef4444", // Red
-            label: "[ PANIC LEVEL: SPEEDRUN MODE ]"
+            label: "[ PANIC LEVEL: SPEEDRUN MODE ]",
+            media: "/assets/memes/praying.gif"
         }
     },
 
     examMessages: {
         earlyBird: [
             "Oho bhai. Itni jaldi paper dhoond raha hai?",
-            "Iss baar topper banne ka plan hai?"
+            "Iss baar toppr banne ka plan hai?"
         ],
         oneMonth: [
-            "Abhi bhi chance hai.",
-            "Reels kam, revision zyada."
+            "Abhi to bohot time hai, assignment likh",
+            "wo reel bheji hai react to karde bhai"
         ],
         oneWeek: [
-            "Thoda panic allowed hai.",
-            "Syllabus dekhne ka time aa gaya hai."
+            "aree sir abhi to ek week hai, aap badme ana",
+            "dukan se saaman leke aa phir padhna."
         ],
         oneDay: [
-            "Welcome to the annual GTU speedrun.",
-            "One night fight. May the odds be ever in your favor."
+            "ek din me kitna he padhlega",
+            "syllabus se deleted topic to nhi padhraha na?"
         ],
         examDay: [
-            "Bhagwan bharose mode activated.",
-            "Jo hoga dekha jayega. Print nikal aur padh."
+            "next sem dedena bhai",
+            "23 marks ka to padhle bhai"
         ]
     },
 

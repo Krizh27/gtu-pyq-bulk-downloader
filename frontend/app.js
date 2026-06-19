@@ -101,10 +101,21 @@ function loadBackgroundReel() {
 }
 
 function startMemeBanner() {
-    const bannerEl = document.getElementById("memeBanner");
-    // Combine all banners into one scrolling string separated by lots of space
+    const trackEl = document.getElementById("memeBannerTrack");
+    const content1 = document.getElementById("memeBanner1");
+    const content2 = document.getElementById("memeBanner2");
+
     if (CONTENT.banners && CONTENT.banners.length > 0) {
-        bannerEl.innerHTML = CONTENT.banners.join(" &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ");
+        const fullText = CONTENT.banners.join(" &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ") + " &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ";
+        content1.innerHTML = fullText;
+        content2.innerHTML = fullText;
+    }
+    
+    // Apply speed control variable
+    if (CONTENT.bannerSpeed) {
+        // Convert speed (e.g. 12) to duration (25s) so higher numbers are faster
+        const duration = 300 / CONTENT.bannerSpeed;
+        trackEl.style.animation = `scroll-marquee ${duration}s linear infinite`;
     }
 }
 
@@ -150,6 +161,8 @@ function calculatePanicLevel() {
     document.getElementById("panicLabel").textContent = panicData.label;
     document.getElementById("panicLabel").style.color = panicData.color;
     document.getElementById("panicMessage").textContent = `"${randomMsg}"`;
+    
+    renderPanicMedia(stateKey);
 }
 
 function checkSubjectMeme(e) {
@@ -163,6 +176,50 @@ function checkSubjectMeme(e) {
         box.classList.remove("hidden");
     } else {
         box.classList.add("hidden");
+    }
+}
+
+function renderPanicMedia(stateKey) {
+    const container = document.getElementById("panicMediaContainer");
+    if (!container) return;
+
+    const panicData = CONTENT.panicLevels[stateKey];
+    if (!panicData || !panicData.media) {
+        container.innerHTML = '<div class="panic-media-fallback">Meme unavailable. Study instead.</div>';
+        container.classList.remove("hidden");
+        return;
+    }
+
+    const mediaPath = panicData.media;
+    const ext = mediaPath.split('.').pop().toLowerCase();
+    const videoExts = ['mp4', 'webm'];
+    const imageExts = ['gif', 'jpg', 'jpeg', 'png', 'webp'];
+
+    container.innerHTML = '';
+    container.classList.remove("hidden");
+
+    if (videoExts.includes(ext)) {
+        const v = document.createElement("video");
+        v.controls = true;
+        v.autoplay = true;
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.src = mediaPath;
+        v.addEventListener('error', () => {
+            container.innerHTML = '<div class="panic-media-fallback">Meme unavailable. Study instead.</div>';
+        });
+        container.appendChild(v);
+    } else if (imageExts.includes(ext)) {
+        const img = document.createElement("img");
+        img.src = mediaPath;
+        img.alt = `Panic Level Meme: ${stateKey}`;
+        img.addEventListener('error', () => {
+            container.innerHTML = '<div class="panic-media-fallback">Meme unavailable. Study instead.</div>';
+        });
+        container.appendChild(img);
+    } else {
+        container.innerHTML = '<div class="panic-media-fallback">Meme unavailable. Study instead.</div>';
     }
 }
 
@@ -398,3 +455,85 @@ function watchExamDate() {
         console.warn('watchExamDate init failed', err);
     }
 }
+
+// ----------------------------------------------------------------------------
+// HAMSTER EASTER EGG LOGIC
+// ----------------------------------------------------------------------------
+function initHamsterEasterEgg() {
+    const hamsterContainer = document.querySelector('.hamster-easter-egg');
+    const thoughtBubble = document.querySelector('.hamster-thought-bubble');
+
+    // Add your audio file path here (e.g., "/assets/memes/squeak.mp3")
+    // If you leave it empty (""), only the text bubble will show.
+    const audioPath = "/assets/memes/fah.mp3"; 
+
+    if (!hamsterContainer || !thoughtBubble) return;
+
+    let audioObj = null;
+    if (audioPath) {
+        audioObj = new Audio(audioPath);
+    }
+
+    function toggleBubble(e) {
+        if (e) e.preventDefault();
+        
+        const isOpening = !thoughtBubble.classList.contains('active');
+        thoughtBubble.classList.toggle('active');
+
+        // Play audio only when opening the bubble, if path is provided
+        if (isOpening && audioObj) {
+            audioObj.currentTime = 0; // Rewind to start
+            audioObj.play().catch(err => console.log('Audio play prevented by browser', err));
+        }
+    }
+
+    // Handle mouse click
+    hamsterContainer.addEventListener('click', toggleBubble);
+
+    // Handle keyboard interaction (Enter or Space)
+    hamsterContainer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            toggleBubble(e);
+        }
+    });
+}
+
+// Initialize easter egg
+initHamsterEasterEgg();
+
+// ----------------------------------------------------------------------------
+// VISITOR COUNTER LOGIC
+// ----------------------------------------------------------------------------
+async function initVisitorCounter() {
+    const countEl = document.getElementById('visitorCount');
+    if (!countEl) return;
+
+    const namespace = "gtuspeedrun";
+    const key = "visits";
+    const hasVisited = localStorage.getItem("hasVisitedGtuSpeedrun");
+
+    try {
+        let response;
+        if (!hasVisited) {
+            // Increment
+            response = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`);
+            localStorage.setItem("hasVisitedGtuSpeedrun", "true");
+        } else {
+            // Just get current count
+            response = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`);
+        }
+        
+        const data = await response.json();
+        if (data && typeof data.count !== 'undefined') {
+            countEl.textContent = data.count.toLocaleString();
+        } else {
+            countEl.textContent = "Many";
+        }
+    } catch (err) {
+        console.warn('Visitor counter failed to load', err);
+        countEl.textContent = "Many";
+    }
+}
+
+// Initialize visitor counter
+initVisitorCounter();

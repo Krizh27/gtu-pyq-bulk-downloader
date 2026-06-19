@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://gtuspeedrun.netlify.app/</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!--
+    NOTE ON DYNAMIC ROUTES (Subject Pages, Branch Pages):
+    Because GTU Speedrun is a Single-Page Application (SPA) where content is 
+    loaded dynamically via JavaScript without separate HTML files, search engines 
+    can only crawl the homepage index.html.
+    
+    If you want subject/branch pages indexed in the future, you must either:
+    1. Pre-render static HTML pages for each subject during build (e.g., using a static site generator).
+    2. Use query parameters for routing and dynamically generate this sitemap.xml 
+       during your build step to include URLs like:
+       <url><loc>https://gtuspeedrun.netlify.app/?subjectCode=3150703</loc></url>
+  -->
+</urlset>

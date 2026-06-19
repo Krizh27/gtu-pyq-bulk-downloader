@@ -1,13 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTU Speedrun Archive</title>
+    <title>GTU PYQ Archive | Previous Year Question Papers</title>
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="GTU PYQ Archive | Previous Year Question Papers">
+    <meta name="description"
+        content="Download GTU Previous Year Question Papers (PYQ) instantly. GTU Speedrun is a fast, one-click archive for engineering and diploma students preparing for exams.">
+    <meta name="keywords"
+        content="GTU PYQ, GTU Previous Year Papers, GTU Question Papers, GTU Exam Preparation, GTU Question Bank, GTU Papers PDF">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://gtuspeedrun.netlify.app/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gtuspeedrun.netlify.app/">
+    <meta property="og:title" content="GTU PYQ Archive | Previous Year Question Papers">
+    <meta property="og:description"
+        content="Download GTU Previous Year Question Papers (PYQ) instantly. GTU Speedrun is a fast, one-click archive for engineering and diploma students preparing for exams.">
+    <meta property="og:image" content="/public/og-image.png">
+    <meta property="og:site_name" content="GTU Speedrun">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://gtuspeedrun.netlify.app/">
+    <meta property="twitter:title" content="GTU PYQ Archive | Previous Year Question Papers">
+    <meta property="twitter:description"
+        content="Download GTU Previous Year Question Papers (PYQ) instantly. GTU Speedrun is a fast, one-click archive for engineering and diploma students preparing for exams.">
+    <meta property="twitter:image" content="https://gtuspeedrun.netlify.app/og-image.png">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://gtuspeedrun.netlify.app/#website",
+          "url": "https://gtuspeedrun.netlify.app/",
+          "name": "GTU Speedrun",
+          "description": "A fast GTU Previous Year Question Paper archive.",
+          "publisher": {
+            "@id": "https://gtuspeedrun.netlify.app/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://gtuspeedrun.netlify.app/?subjectCode={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://gtuspeedrun.netlify.app/#organization",
+          "name": "GTU Speedrun",
+          "url": "https://gtuspeedrun.netlify.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://gtuspeedrun.netlify.app/assets/logo.png"
+          }
+        },
+        {
+          "@type": "EducationalOrganization",
+          "name": "GTU Speedrun",
+          "url": "https://gtuspeedrun.netlify.app/",
+          "description": "Providing Gujarat Technological University students with quick access to past question papers."
+        }
+      ]
+    }
+    </script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <!-- Background Video Reel -->
     <video autoplay loop muted playsinline id="bgReel" class="bg-reel"></video>
@@ -15,16 +85,19 @@
 
     <!-- Rotating Meme Banner -->
     <div class="banner-container">
-        <marquee id="memeBanner" class="meme-banner" scrollamount="6">Loading wisdom...</marquee>
+        <div class="marquee-track" id="memeBannerTrack">
+            <div class="marquee-content" id="memeBanner1">Loading wisdom...</div>
+            <div class="marquee-content" id="memeBanner2">Loading wisdom...</div>
+        </div>
     </div>
 
     <!-- Main Glassmorphic Container -->
     <div class="glass-container">
-        
+
         <!-- Header -->
         <header class="app-header">
             <h1>GTU <span class="highlight">SPEEDRUN</span></h1>
-            <p>Previous Year Question Paper Archive</p>
+            <p>PYQ Bulk Downloader <span class="highlight">Fetch PYQs in a Single Click</span> </p>
         </header>
 
         <!-- Panic Meter -->
@@ -33,21 +106,36 @@
             <div id="panicMessage" class="panic-message">Checking dates...</div>
         </div>
 
+        <!-- Panic Media (NEW) -->
+        <div id="panicMediaContainer" class="panic-media-container hidden"></div>
+
         <!-- Global Paper Media (shows below panic meter) -->
         <div id="paperMediaDisplay" class="paper-media-display">
             <!-- Fallback static image so media is visible even if JS fails -->
             <div class="paper-media">
-                <img src="/homelander-im-better.gif" alt="paper media fallback">
+                <img src="/assets/memes/homelander-im-better.gif" alt="paper media fallback">
             </div>
         </div>
 
         <main>
+            <!-- AI & Search Engine Optimization Context (Visually Hidden) -->
+            <section
+                style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">
+                <h2>About GTU Speedrun</h2>
+                <p>GTU Speedrun is a fast, efficient archive for Gujarat Technological University (GTU) students to
+                    download Previous Year Question Papers (PYQ). It is designed for engineering, diploma, pharmacy, and
+                    management students who need quick access to exam resources, past papers, and question banks without
+                    navigating complex portals. Features include bulk downloading of summer and winter session papers by
+                    subject code.</p>
+            </section>
+
             <!-- Search Form -->
-            <section class="glass-card">
+            <section class="glass-card" aria-label="Search GTU Papers">
                 <form id="pyqForm">
                     <div class="form-group">
                         <label for="subjectCode">Subject Code</label>
-                        <input type="text" id="subjectCode" class="glass-input" placeholder="e.g. 3150703" required minlength="4" maxlength="15" autocomplete="off">
+                        <input type="text" id="subjectCode" class="glass-input" placeholder="e.g. 3150703" required
+                            minlength="4" maxlength="15" autocomplete="off" aria-label="Enter GTU Subject Code">
                         <!-- Subject Specific Meme Box -->
                         <div id="subjectMemeBox" class="subject-meme hidden"></div>
                     </div>
@@ -55,7 +143,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="course">Course</label>
-                            <select id="course" class="glass-input" required>
+                            <select id="course" class="glass-input" required aria-label="Select Course">
                                 <option value="BE">BE</option>
                                 <option value="ME">ME</option>
                                 <option value="BCA">BCA</option>
@@ -101,9 +189,10 @@
                 <div class="results-header">
                     <h3 id="resultSummary">Papers Found: 0</h3>
                 </div>
-                
+
                 <div id="corsWarning" class="warning-box hidden">
-                    <strong>CORS Blocked.</strong> GTU server rejected the auto-download. Click the links below manually.
+                    <strong>CORS Blocked.</strong> GTU server rejected the auto-download. Click the links below
+                    manually.
                 </div>
 
                 <div class="paper-list-container">
@@ -117,16 +206,58 @@
                         Download All (ZIP)
                     </button>
                 </div>
-                
+
                 <!-- Download Success Message (Meme) -->
                 <div id="downloadMemeBox" class="success-meme hidden mt-1"></div>
             </section>
         </main>
     </div>
 
+    <!-- Footer -->
+    <footer class="app-footer">
+
+        <!-- Hamster Easter Egg -->
+        <div class="hamster-easter-egg" tabindex="0" aria-label="Hamster easter egg" role="button">
+            <div class="hamster-thought-bubble">
+                do not disturb
+                <div class="bubble-tail"></div>
+                <div class="bubble-tail-small"></div>
+            </div>
+            <div aria-label="Orange and tan hamster running in a metal wheel" role="img" class="wheel-and-hamster">
+                <div class="wheel"></div>
+                <div class="hamster">
+                    <div class="hamster__body">
+                        <div class="hamster__head">
+                            <div class="hamster__ear"></div>
+                            <div class="hamster__eye"></div>
+                            <div class="hamster__nose"></div>
+                        </div>
+                        <div class="hamster__limb hamster__limb--fr"></div>
+                        <div class="hamster__limb hamster__limb--fl"></div>
+                        <div class="hamster__limb hamster__limb--br"></div>
+                        <div class="hamster__limb hamster__limb--bl"></div>
+                        <div class="hamster__tail"></div>
+                    </div>
+                </div>
+                <div class="spoke"></div>
+            </div>
+        </div>
+
+        <p>Cooked by Krizh</p>
+        <div class="social-links">
+            <a href="https://github.com/Krizh27" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://www.linkedin.com/in/krish-mahyavanshi-1651421b5/" target="_blank">LinkedIn</a>
+        </div>
+
+        <div class="visitor-counter glass-card">
+            👨‍🎓 Live Count : <span id="visitorCount">...</span> Students Survived GTU Using Speedrun
+        </div>
+    </footer>
+
     <!-- Load the Config FIRST -->
     <script src="config/content.js"></script>
     <!-- Load the Logic SECOND -->
     <script src="app.js"></script>
 </body>
+
 </html>
