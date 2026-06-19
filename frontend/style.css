@@ -738,3 +738,32 @@ label {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* Error Cards */
+.error-card {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-left: 4px solid #ef4444;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    color: #fca5a5;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    backdrop-filter: blur(12px);
+    animation: fadeMediaIn 0.3s ease;
+}
+
+.error-card.warning {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-left-color: #f59e0b;
+    color: #fcd34d;
+}
+
+.error-card strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+    color: white;
+}

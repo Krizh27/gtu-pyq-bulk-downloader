@@ -273,9 +273,10 @@ function makeFilename(url, course, subjectCode) {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    const errorEl = document.getElementById("yearError");
-    errorEl.textContent = "";
+    const errorEl = document.getElementById("formError");
+    errorEl.innerHTML = "";
     errorEl.classList.add("hidden");
+    errorEl.className = "error-card hidden"; // reset to default error
     
     document.getElementById("resultsSection").classList.add("hidden");
     document.getElementById("downloadMemeBox").classList.add("hidden");
@@ -290,26 +291,67 @@ async function handleFormSubmit(e) {
     const endYear = parseInt(document.getElementById("endYear").value);
     const sessionMode = document.getElementById("sessionMode").value;
     
-    if (startYear > endYear) {
-        errorEl.textContent = "Start year cannot be after end year bro.";
+    function showError(msg, isWarning = false) {
+        errorEl.innerHTML = msg;
+        if (isWarning) {
+            errorEl.classList.add("warning");
+        }
         errorEl.classList.remove("hidden");
         resetSubmitButton();
-        return;
+    }
+    
+    // Scenario 3: Validation
+    if (!subjectCode) {
+        return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code cannot be empty.", true);
+    }
+    if (!/^\d+$/.test(subjectCode)) {
+        return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code must contain only numbers (e.g., 3150703).", true);
+    }
+    if (subjectCode.length < 5 || subjectCode.length > 10) {
+        return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code length is invalid.", true);
+    }
+    
+    if (startYear > endYear) {
+        return showError("❌ <strong>Invalid Years</strong> Start year cannot be after end year bro.");
     }
     
     const sessions = sessionMode === "SW" ? ["S", "W"] : [sessionMode];
     lastFormData = { subjectCode, course, startYear, endYear, sessions };
     
+    // Scenario 2: Timeout implementation
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    console.log(`[Search] Started search for ${subjectCode}`);
+    
     try {
         const response = await fetch("/api/pyq/check", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(lastFormData)
+            body: JSON.stringify(lastFormData),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        // Scenario 5: GTU Website Changed (or Backend crash returning HTML)
+        const contentType = response.headers.get("content-type");
+        if (response.status === 502 || (contentType && contentType.includes("text/html"))) {
+             throw new Error("PARSE_ERROR");
+        }
         
         const data = await response.json();
         
-        if (!response.ok) throw new Error(data.error);
+        if (!response.ok) throw new Error(data.error || "SERVER_ERROR");
+        
+        // Scenario 1: No papers found
+        if (!data.availableUrls || data.availableUrls.length === 0) {
+            console.log(`[Search] Empty results for ${subjectCode}`);
+            showError(`❌ <strong>No papers found for Subject Code ${subjectCode}</strong><br>Please verify the subject code and try again.`);
+            return;
+        }
+        
+        console.log(`[Search] Completed. Found ${data.availableUrls.length} papers.`);
         
         papersState = data.availableUrls.map(url => ({
             url,
@@ -321,8 +363,22 @@ async function handleFormSubmit(e) {
         renderPapersList();
         
     } catch (err) {
-        errorEl.textContent = `Server Error: ${err.message}`;
-        errorEl.classList.remove("hidden");
+        clearTimeout(timeoutId);
+        
+        if (err.name === 'AbortError') {
+            console.error(`[Search] Timeout reached (10s)`);
+            showError("⏱️ <strong>GTU server is taking too long to respond.</strong><br>Please try again later.", true);
+        } else if (err.message === "PARSE_ERROR") {
+            console.error(`[Search] Parse Error - HTML received instead of JSON`);
+            showError("⚠️ <strong>Unable to parse GTU response.</strong><br>The GTU website may have changed.", true);
+        } else if (err instanceof TypeError) {
+            // Scenario 4: Network Error
+            console.error(`[Search] Network failure`, err);
+            showError("🌐 <strong>Network error.</strong><br>Check your internet connection.");
+        } else {
+            console.error(`[Search] Server error`, err);
+            showError(`❌ <strong>Server Error</strong><br>${err.message}`);
+        }
     } finally {
         resetSubmitButton();
     }
