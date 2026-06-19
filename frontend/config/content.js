@@ -8,6 +8,7 @@
  */
 
 const CONTENT = {
+
     // ----------------------------------------------------
     // BACKGROUND VIDEO REELS
     // Set enabled to false to temporarily hide a video
@@ -43,7 +44,7 @@ const CONTENT = {
     // ----------------------------------------------------
     // Change this mock date to test different panic states (Format: YYYY-MM-DD)
     // Exam date is set dynamically in the app based on this config
-    examDate: "2026-06-18",
+    examDate: "2026-05-15",
 
     panicLevels: {
         relaxed: {
@@ -116,30 +117,4 @@ const CONTENT = {
         "Downloads done. Excuses unavailable.",
         "ZIP file ready. Folder banake bhool mat jana."
     ]
-    ,
-
-    // ----------------------------------------------------
-    // PAPER MEDIA (images / gifs / videos)
-    // Map labels to media or set a default media shown under each label.
-    // Edit `overrides` to customize per-label media easily.
-    // ----------------------------------------------------
-    paperMedia: {
-        // Default media shown when no per-label override exists
-        default: {
-            type: "image",
-            url: "homelander-im-better.gif"
-        },
-
-        // Overrides: use the exact label string (as rendered) to target a specific paper
-        overrides: {
-            "Summer 2022": {
-                type: "gif",
-                url: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif"
-            },
-            "Winter 2021": {
-                type: "video",
-                url: "https://videos.pexels.com/video-files/854176/854176-hd_1920_1080_30fps.mp4"
-            }
-        }
-    }
 };
