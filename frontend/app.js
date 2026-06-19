@@ -1,73 +1,202 @@
 /**
- * Purpose: Central application logic handling form submission, API requests, and ZIP generation.
- * This is written in Vanilla JavaScript to maximize readability and fundamental learning.
+ * ====================================
+ *  MEME ENGINE & APPLICATION LOGIC
+ * ====================================
  */
 
-// --- Constants & State ---
-let papersState = []; // Holds the current list of papers: { url, label, filename, status }
+let papersState = [];
 let lastFormData = null;
 
-// --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
-    populateYears();
-    setupEventListeners();
+    try {
+        if (typeof CONTENT === "undefined") {
+            throw new Error("CONTENT is not defined. Ensure config/content.js is loaded first.");
+        }
+        initMemeEngine();
+        populateYears();
+        setupEventListeners();
+    } catch (e) {
+        console.error("Critical Failure:", e);
+        alert("Failed to load application: " + e.message);
+    }
 });
 
-/**
- * Purpose: Populates the Start Year and End Year dropdowns dynamically.
- * Input: None (uses current date).
- * Output: Modifies DOM to add <option> elements to year selects.
- * Example: Adds options from 2026 down to 2014.
- */
+// --- Meme Engine Controllers ---
+
+function initMemeEngine() {
+    loadBackgroundReel();
+    startMemeBanner();
+    calculatePanicLevel();
+    // Render default paper media under panic widget
+    renderPaperMedia();
+    // Watch for changes to examDate in the config and reload when it changes
+    watchExamDate();
+}
+
+// Render the global paper media area under the panic meter.
+// If `label` is provided and an override exists, that media is used.
+function renderPaperMedia(label) {
+    const container = document.getElementById('paperMediaDisplay');
+    if (!container) return;
+    if (!window.CONTENT || !CONTENT.paperMedia) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+
+    const pm = CONTENT.paperMedia;
+    const overrides = pm.overrides || {};
+    let entry = null;
+    if (label && overrides[label]) entry = overrides[label];
+    if (!entry) entry = pm.default || null;
+
+    if (!entry || !entry.url) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        return;
+    }
+
+    const rawUrl = entry.url;
+    const type = (entry.type || '').toLowerCase();
+    console.log('renderPaperMedia ->', { label, type, rawUrl });
+
+    // Normalize to absolute path for local assets so the browser requests from web root
+    let src = rawUrl;
+    if (!/^https?:\/\//i.test(rawUrl) && !rawUrl.startsWith('/')) {
+        src = '/' + rawUrl;
+    }
+
+    container.innerHTML = '';
+    container.classList.remove('hidden');
+    container.classList.add('debug-visible');
+
+    if (type === 'video') {
+        const v = document.createElement('video');
+        v.controls = true;
+        v.loop = true;
+        v.muted = true;
+        v.playsInline = true;
+        v.src = src;
+        v.style.display = 'block';
+        v.addEventListener('error', (e) => console.error('paper media video load error', e, src));
+        container.appendChild(v);
+    } else {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'paper media';
+        img.style.display = 'block';
+        img.addEventListener('load', () => console.log('paper media loaded', src));
+        img.addEventListener('error', (e) => console.error('paper media image load error', e, src));
+        container.appendChild(img);
+    }
+}
+
+function loadBackgroundReel() {
+    const videoEl = document.getElementById("bgReel");
+    const enabledReels = CONTENT.reels.filter(r => r.enabled);
+    if (enabledReels.length > 0) {
+        const randomReel = enabledReels[Math.floor(Math.random() * enabledReels.length)];
+        videoEl.src = randomReel.url;
+    }
+}
+
+function startMemeBanner() {
+    const bannerEl = document.getElementById("memeBanner");
+    // Combine all banners into one scrolling string separated by lots of space
+    if (CONTENT.banners && CONTENT.banners.length > 0) {
+        bannerEl.innerHTML = CONTENT.banners.join(" &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ");
+    }
+}
+
+function calculatePanicLevel() {
+    const today = new Date();
+    const examDate = new Date(CONTENT.examDate);
+    const diffTime = examDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let stateKey = "relaxed";
+    let messageCategory = "earlyBird";
+
+    // Treat past dates as relaxed/earlyBird; today is exam day
+        // New thresholds:
+        // - past dates or >30 days => relaxed (green)
+        // - 7+ days up to 30 => yellow (warning)
+        // - 4..6 days => yellow (warning)
+        // - exactly 3 days => orange (panic)
+        // - 2,1,0 => critical (red)
+        if (diffDays < 0 || diffDays > 30) {
+            stateKey = "relaxed";
+            messageCategory = "earlyBird";
+        } else if (diffDays <= 2) {
+            stateKey = "critical";
+            messageCategory = "examDay";
+        } else if (diffDays === 3) {
+            stateKey = "panic"; // orange
+            messageCategory = "oneWeek"; // reuse a short-warning message set
+        } else if (diffDays <= 30) {
+            // Covers 4..30 (7-day and 30-day yellow ranges)
+            stateKey = "warning";
+            messageCategory = "oneMonth";
+        }
+
+    // Update UI
+    const panicData = CONTENT.panicLevels[stateKey];
+    const messages = CONTENT.examMessages[messageCategory];
+    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+
+    const widget = document.getElementById("panicMeter");
+    widget.style.borderTopColor = panicData.color;
+    
+    document.getElementById("panicLabel").textContent = panicData.label;
+    document.getElementById("panicLabel").style.color = panicData.color;
+    document.getElementById("panicMessage").textContent = `"${randomMsg}"`;
+}
+
+function checkSubjectMeme(e) {
+    const code = e.target.value.trim();
+    const box = document.getElementById("subjectMemeBox");
+    
+    if (CONTENT.subjectMemes[code]) {
+        const memes = CONTENT.subjectMemes[code];
+        const randomMeme = memes[Math.floor(Math.random() * memes.length)];
+        box.textContent = randomMeme;
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
+// --- Application Core UI & Logic ---
+
 function populateYears() {
     const currentYear = new Date().getFullYear();
     const startSelect = document.getElementById("startYear");
     const endSelect = document.getElementById("endYear");
     
     for (let year = currentYear; year >= 2014; year--) {
-        const option1 = new Option(year, year);
-        const option2 = new Option(year, year);
-        startSelect.add(option1);
-        endSelect.add(option2);
+        startSelect.add(new Option(year, year));
+        endSelect.add(new Option(year, year));
     }
     
-    // Set default ranges
     startSelect.value = currentYear - 2;
     endSelect.value = currentYear;
 }
 
-/**
- * Purpose: Attach all necessary event listeners to UI elements.
- * Input: None.
- * Output: Attaches click/submit handlers.
- */
 function setupEventListeners() {
-    // Form submission
     document.getElementById("pyqForm").addEventListener("submit", handleFormSubmit);
-    
-    // Download ZIP button
     document.getElementById("downloadBtn").addEventListener("click", handleDownloadZip);
+    document.getElementById("subjectCode").addEventListener("keyup", checkSubjectMeme);
 
-    // Session Toggle Buttons (Summer/Winter/Both)
     const toggleBtns = document.querySelectorAll(".toggle-btn");
     toggleBtns.forEach(btn => {
         btn.addEventListener("click", (e) => {
-            // Remove active class from all
             toggleBtns.forEach(b => b.classList.remove("active"));
-            // Add to clicked
             e.target.classList.add("active");
-            // Update hidden input
             document.getElementById("sessionMode").value = e.target.dataset.value;
         });
     });
 }
 
-/**
- * Purpose: Converts a GTU URL into a human-readable label.
- * Input: url (String) - e.g. "https://gtu.ac.in/uploads/W2021/BE/3150703.pdf"
- * Output: label (String) - e.g. "Winter 2021"
- * Example: makeLabel(".../S2022/...") returns "Summer 2022"
- */
 function makeLabel(url) {
     const match = url.match(/\/(S|W)(\d{4})\//);
     if (match) {
@@ -76,12 +205,6 @@ function makeLabel(url) {
     return url;
 }
 
-/**
- * Purpose: Converts a GTU URL into a clean filename for the ZIP archive.
- * Input: url (String), course (String), subjectCode (String)
- * Output: filename (String)
- * Example: makeFilename(".../W2021/...", "BE", "315") -> "315_BE_Winter2021.pdf"
- */
 function makeFilename(url, course, subjectCode) {
     const match = url.match(/\/(S|W)(\d{4})\//);
     if (match) {
@@ -90,71 +213,59 @@ function makeFilename(url, course, subjectCode) {
     return "paper.pdf";
 }
 
-/**
- * Purpose: Handles the main form submission, validates input, and fetches candidate URLs from backend.
- * Input: Event object from form submit.
- * Output: Fetches JSON and triggers UI render.
- */
 async function handleFormSubmit(e) {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault();
     
-    // Reset UI state
-    document.getElementById("yearError").textContent = "";
+    const errorEl = document.getElementById("yearError");
+    errorEl.textContent = "";
+    errorEl.classList.add("hidden");
+    
     document.getElementById("resultsSection").classList.add("hidden");
-    document.getElementById("submitBtn").disabled = true;
-    document.getElementById("submitBtn").textContent = "Generating...";
+    document.getElementById("downloadMemeBox").classList.add("hidden");
     
-    // Gather values
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Searching Archives...";
+    
     const subjectCode = document.getElementById("subjectCode").value.trim();
     const course = document.getElementById("course").value;
     const startYear = parseInt(document.getElementById("startYear").value);
     const endYear = parseInt(document.getElementById("endYear").value);
     const sessionMode = document.getElementById("sessionMode").value;
     
-    // Validation
     if (startYear > endYear) {
-        document.getElementById("yearError").textContent = "Start year must be before end year.";
+        errorEl.textContent = "Start year cannot be after end year bro.";
+        errorEl.classList.remove("hidden");
         resetSubmitButton();
         return;
     }
     
     const sessions = sessionMode === "SW" ? ["S", "W"] : [sessionMode];
-    
-    const payload = {
-        subjectCode,
-        course,
-        startYear,
-        endYear,
-        sessions
-    };
+    lastFormData = { subjectCode, course, startYear, endYear, sessions };
     
     try {
-        // We use relative path "/api" because the Express backend serves this HTML file!
         const response = await fetch("/api/pyq/check", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(lastFormData)
         });
         
         const data = await response.json();
         
-        if (!response.ok) {
-            throw new Error(data.error || "Failed to generate links");
-        }
+        if (!response.ok) throw new Error(data.error);
         
-        // Success: Map response to our frontend state format
-        lastFormData = payload;
         papersState = data.availableUrls.map(url => ({
             url,
             label: makeLabel(url),
             filename: makeFilename(url, course, subjectCode),
-            status: "pending" // pending | downloading | done | failed
+            status: "pending"
         }));
         
         renderPapersList();
         
     } catch (err) {
-        alert("Error: " + err.message);
+        errorEl.textContent = `Server Error: ${err.message}`;
+        errorEl.classList.remove("hidden");
     } finally {
         resetSubmitButton();
     }
@@ -163,67 +274,63 @@ async function handleFormSubmit(e) {
 function resetSubmitButton() {
     const btn = document.getElementById("submitBtn");
     btn.disabled = false;
-    btn.textContent = "Get Paper Links";
+    btn.textContent = "Find Papers";
 }
 
-/**
- * Purpose: Renders the papersState array into the DOM.
- * Input: None (reads from global papersState).
- * Output: Updates HTML of the #paperList ul element.
- */
 function renderPapersList() {
     const listEl = document.getElementById("paperList");
     const sectionEl = document.getElementById("resultsSection");
     
-    listEl.innerHTML = ""; // Clear existing
-    
-    document.getElementById("resultTitle").textContent = `${papersState.length} papers found`;
+    document.getElementById("resultSummary").textContent = `Papers Found: ${papersState.length}`;
     document.getElementById("corsWarning").classList.add("hidden");
+    document.getElementById("downloadRow").classList.remove("hidden");
     
-    papersState.forEach((paper, index) => {
+    listEl.innerHTML = "";
+    
+    papersState.forEach(paper => {
         const li = document.createElement("li");
         li.className = "paper-item";
         
-        // Status indicator text/emojis instead of complex SVG icons for simplicity
-        let statusIcon = "📄";
-        if (paper.status === "downloading") statusIcon = "⏳";
-        if (paper.status === "done") statusIcon = "✅";
-        if (paper.status === "failed") statusIcon = "❌";
+        let icon = "📄";
+        if (paper.status === "downloading") icon = "⏳";
+        if (paper.status === "done") icon = "✅";
+        if (paper.status === "failed") icon = "❌";
         
         li.innerHTML = `
-            <div>
-                <span class="status-icon">${statusIcon}</span>
-                <span>${paper.label}</span>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                <span class="status-icon">${icon}</span>
+                <span class="paper-label">${paper.label}</span>
             </div>
-            <a href="${paper.url}" target="_blank" class="paper-link">Open</a>
+            <a href="${paper.url}" target="_blank" class="paper-link">View Original</a>
         `;
         listEl.appendChild(li);
     });
     
+    // Show media for the first paper if available, otherwise default
+    if (papersState.length > 0) {
+        renderPaperMedia(papersState[0].label);
+    } else {
+        renderPaperMedia();
+    }
+
     sectionEl.classList.remove("hidden");
 }
 
-/**
- * Purpose: Iterates through papersState, fetches PDFs, and builds a ZIP file using JSZip.
- * Input: None (triggered by click).
- * Output: Triggers browser download of a .zip file.
- */
 async function handleDownloadZip() {
     if (!papersState.length || !lastFormData) return;
     
     const btn = document.getElementById("downloadBtn");
     btn.disabled = true;
-    btn.textContent = "Downloading...";
+    btn.textContent = "Downloading & Zipping...";
     
     const zip = new JSZip();
     let successCount = 0;
-    let failCount = 0;
     let corsError = false;
     
     for (let i = 0; i < papersState.length; i++) {
         const paper = papersState[i];
         paper.status = "downloading";
-        renderPapersList(); // Re-render to show spinner/hourglass
+        renderPapersList();
         
         try {
             const response = await fetch(paper.url);
@@ -234,47 +341,60 @@ async function handleDownloadZip() {
                 successCount++;
             } else {
                 paper.status = "failed";
-                failCount++;
             }
         } catch (err) {
-            // Fetch throws TypeError on CORS blocks
             if (err instanceof TypeError) corsError = true;
             paper.status = "failed";
-            failCount++;
         }
     }
     
-    renderPapersList(); // Final render for statuses
-    
-    // Update legend
-    const legend = document.getElementById("legend");
-    const sText = document.getElementById("successCount");
-    const fText = document.getElementById("failCount");
-    
-    legend.classList.remove("hidden");
-    if (successCount > 0) {
-        sText.textContent = `${successCount} downloaded`;
-        sText.classList.remove("hidden");
-    }
-    if (failCount > 0) {
-        fText.textContent = `${failCount} not on GTU`;
-        fText.classList.remove("hidden");
-    }
+    renderPapersList();
     
     if (successCount > 0) {
-        // Generate and download zip
         const content = await zip.generateAsync({ type: "blob" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(content);
-        a.download = `${lastFormData.subjectCode}_${lastFormData.course}.zip`;
+        a.download = `${lastFormData.subjectCode}_${lastFormData.course}_PYQ.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
+        
+        // Show random meme success message
+        const memeBox = document.getElementById("downloadMemeBox");
+        const randomMsg = CONTENT.downloadMessages[Math.floor(Math.random() * CONTENT.downloadMessages.length)];
+        memeBox.textContent = `✨ ${randomMsg}`;
+        memeBox.classList.remove("hidden");
     } else if (corsError) {
         document.getElementById("corsWarning").classList.remove("hidden");
+        document.getElementById("downloadRow").classList.add("hidden");
     }
     
     btn.textContent = "Download Again";
     btn.disabled = false;
+}
+
+// Periodically fetch the config file (cache-busted) and reload page when examDate changes
+function watchExamDate() {
+    try {
+        let lastExamDate = CONTENT.examDate;
+        const url = '/config/content.js';
+        setInterval(async () => {
+            try {
+                const res = await fetch(`${url}?_=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) return;
+                const text = await res.text();
+                const m = text.match(/examDate\s*:\s*["']([^"']+)["']/);
+                if (m && m[1] !== lastExamDate) {
+                    // New date detected — reload to load updated CONTENT
+                    console.info('examDate changed from', lastExamDate, 'to', m[1], '- reloading');
+                    location.reload();
+                }
+            } catch (e) {
+                console.warn('watchExamDate fetch failed', e);
+            }
+        }, 5000);
+    } catch (err) {
+        console.warn('watchExamDate init failed', err);
+    }
 }

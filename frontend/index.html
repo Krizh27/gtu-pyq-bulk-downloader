@@ -3,93 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTU PYQ Downloader</title>
-    <!-- We load JSZip from CDN to handle building the zip file without a bundler -->
+    <title>GTU Speedrun Archive</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>GTU PYQ Downloader</h1>
-            <p>Directly fetch and bundle Previous Year Questions from GTU servers.</p>
+    <!-- Background Video Reel -->
+    <video autoplay loop muted playsinline id="bgReel" class="bg-reel"></video>
+    <div class="bg-overlay"></div>
+
+    <!-- Rotating Meme Banner -->
+    <div class="banner-container">
+        <marquee id="memeBanner" class="meme-banner" scrollamount="6">Loading wisdom...</marquee>
+    </div>
+
+    <!-- Main Glassmorphic Container -->
+    <div class="glass-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <h1>GTU <span class="highlight">SPEEDRUN</span></h1>
+            <p>Previous Year Question Paper Archive</p>
         </header>
 
+        <!-- Panic Meter -->
+        <div id="panicMeter" class="panic-widget">
+            <div id="panicLabel" class="panic-label">Loading Status...</div>
+            <div id="panicMessage" class="panic-message">Checking dates...</div>
+        </div>
+
+        <!-- Global Paper Media (shows below panic meter) -->
+        <div id="paperMediaDisplay" class="paper-media-display hidden"></div>
+
         <main>
-            <section class="card form-section">
+            <!-- Search Form -->
+            <section class="glass-card">
                 <form id="pyqForm">
                     <div class="form-group">
                         <label for="subjectCode">Subject Code</label>
-                        <input type="text" id="subjectCode" placeholder="e.g. 3150703" required minlength="4" maxlength="15">
-                        <small class="error-msg" id="subjectCodeError"></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="course">Course</label>
-                        <select id="course" required>
-                            <option value="BE">BE</option>
-                            <option value="ME">ME</option>
-                            <option value="BCA">BCA</option>
-                            <option value="MCA">MCA</option>
-                            <option value="Diploma">Diploma</option>
-                            <option value="B.Pharm">B.Pharm</option>
-                            <option value="MBA">MBA</option>
-                        </select>
+                        <input type="text" id="subjectCode" class="glass-input" placeholder="e.g. 3150703" required minlength="4" maxlength="15" autocomplete="off">
+                        <!-- Subject Specific Meme Box -->
+                        <div id="subjectMemeBox" class="subject-meme hidden"></div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="startYear">Start Year</label>
-                            <select id="startYear" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="endYear">End Year</label>
-                            <select id="endYear" required></select>
+                            <label for="course">Course</label>
+                            <select id="course" class="glass-input" required>
+                                <option value="BE">BE</option>
+                                <option value="ME">ME</option>
+                                <option value="BCA">BCA</option>
+                                <option value="MCA">MCA</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="B.Pharm">B.Pharm</option>
+                                <option value="MBA">MBA</option>
+                            </select>
                         </div>
                     </div>
-                    <small class="error-msg" id="yearError"></small>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startYear">From Year</label>
+                            <select id="startYear" class="glass-input" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="endYear">To Year</label>
+                            <select id="endYear" class="glass-input" required></select>
+                        </div>
+                    </div>
 
                     <div class="form-group">
                         <label>Session</label>
                         <div class="button-group" id="sessionGroup">
-                            <button type="button" class="toggle-btn" data-value="S">Summer</button>
-                            <button type="button" class="toggle-btn" data-value="W">Winter</button>
-                            <button type="button" class="toggle-btn active" data-value="SW">Both</button>
+                            <button type="button" class="glass-btn toggle-btn" data-value="S">Summer</button>
+                            <button type="button" class="glass-btn toggle-btn" data-value="W">Winter</button>
+                            <button type="button" class="glass-btn toggle-btn active" data-value="SW">Both</button>
                         </div>
-                        <!-- Hidden input to store the active session selection for easy form retrieval -->
                         <input type="hidden" id="sessionMode" value="SW">
                     </div>
 
-                    <button type="submit" id="submitBtn" class="primary-btn">Get Paper Links</button>
+                    <small class="error-msg hidden" id="yearError"></small>
+
+                    <button type="submit" id="submitBtn" class="primary-btn">
+                        Find Papers
+                    </button>
                 </form>
             </section>
 
-            <section class="card results-section hidden" id="resultsSection">
+            <!-- Results Section -->
+            <section id="resultsSection" class="glass-card hidden mt-1">
                 <div class="results-header">
-                    <div class="status-text">
-                        <h3 id="resultTitle">0 papers found</h3>
-                        <p id="resultSubtitle">Your browser will fetch papers directly from GTU</p>
-                    </div>
-                    <button id="downloadBtn" class="primary-btn download-btn">Download ZIP</button>
+                    <h3 id="resultSummary">Papers Found: 0</h3>
                 </div>
-
-                <div class="cors-warning hidden" id="corsWarning">
-                    <strong>GTU restricts cross-origin downloads.</strong> Click each paper link below to open and save it directly from GTU.
-                </div>
-
-                <ul class="paper-list" id="paperList">
-                    <!-- Paper items will be injected here via JavaScript -->
-                </ul>
                 
-                <div class="legend hidden" id="legend">
-                    <span id="successCount" class="success-text hidden">0 downloaded</span>
-                    <span id="failCount" class="error-text hidden">0 not on GTU</span>
+                <div id="corsWarning" class="warning-box hidden">
+                    <strong>CORS Blocked.</strong> GTU server rejected the auto-download. Click the links below manually.
                 </div>
+
+                <div class="paper-list-container">
+                    <ul id="paperList" class="paper-list">
+                        <!-- List injected here -->
+                    </ul>
+                </div>
+
+                <div class="action-row mt-1" id="downloadRow">
+                    <button id="downloadBtn" class="primary-btn">
+                        Download All (ZIP)
+                    </button>
+                </div>
+                
+                <!-- Download Success Message (Meme) -->
+                <div id="downloadMemeBox" class="success-meme hidden mt-1"></div>
             </section>
         </main>
     </div>
 
-    <!-- The main application logic -->
+    <!-- Load the Config FIRST -->
+    <script src="config/content.js"></script>
+    <!-- Load the Logic SECOND -->
     <script src="app.js"></script>
 </body>
 </html>
