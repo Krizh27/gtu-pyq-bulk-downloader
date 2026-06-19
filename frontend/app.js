@@ -501,39 +501,4 @@ function initHamsterEasterEgg() {
 // Initialize easter egg
 initHamsterEasterEgg();
 
-// ----------------------------------------------------------------------------
-// VISITOR COUNTER LOGIC
-// ----------------------------------------------------------------------------
-async function initVisitorCounter() {
-    const countEl = document.getElementById('visitorCount');
-    if (!countEl) return;
 
-    const namespace = "gtuspeedrun";
-    const key = "visits";
-    const hasVisited = localStorage.getItem("hasVisitedGtuSpeedrun");
-
-    try {
-        let response;
-        if (!hasVisited) {
-            // Increment
-            response = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`);
-            localStorage.setItem("hasVisitedGtuSpeedrun", "true");
-        } else {
-            // Just get current count
-            response = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}`);
-        }
-        
-        const data = await response.json();
-        if (data && typeof data.count !== 'undefined') {
-            countEl.textContent = data.count.toLocaleString();
-        } else {
-            countEl.textContent = "Many";
-        }
-    } catch (err) {
-        console.warn('Visitor counter failed to load', err);
-        countEl.textContent = "Many";
-    }
-}
-
-// Initialize visitor counter
-initVisitorCounter();
