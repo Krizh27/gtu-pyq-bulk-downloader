@@ -129,13 +129,22 @@
                     subject code.</p>
             </section>
 
+            <!-- Notice about new subject codes -->
+            <div id="subjectCodeNotice" class="glass-card mt-1" style="margin-bottom: 1rem; position: relative; padding: 1rem; color: #fff;">
+                <button id="dismissNoticeBtn" style="position: absolute; top: 0.5rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: inherit; padding: 0;" aria-label="Dismiss">&times;</button>
+                <p style="margin: 0; font-size: 0.9rem; padding-right: 2rem;"><strong>Update:</strong> GTU introduced new subject codes from the 2025–26 curriculum. Our website supports both old and new subject codes automatically!</p>
+            </div>
+
             <!-- Search Form -->
             <section class="glass-card" aria-label="Search GTU Papers">
                 <form id="pyqForm">
                     <div class="form-group">
                         <label for="subjectCode">Subject Code</label>
-                        <input type="text" id="subjectCode" class="glass-input" placeholder="e.g. 3150703" required
+                        <input type="text" id="subjectCode" class="glass-input" placeholder="e.g. 3150703 or BE04000241" required
                             minlength="4" maxlength="15" autocomplete="off" aria-label="Enter GTU Subject Code">
+                        <small style="display: block; margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8;">
+                            <strong>Tip:</strong> Even if a subject code is new or unmapped, entering it with the correct year range will still fetch your papers perfectly!
+                        </small>
                         <!-- Subject Specific Meme Box -->
                         <div id="subjectMemeBox" class="subject-meme hidden"></div>
                     </div>

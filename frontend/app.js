@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initMemeEngine();
         populateYears();
         setupEventListeners();
+        initNotice();
     } catch (e) {
         console.error("Critical Failure:", e);
         alert("Failed to load application: " + e.message);
@@ -239,6 +240,23 @@ function populateYears() {
     endSelect.value = currentYear;
 }
 
+function initNotice() {
+    const notice = document.getElementById('subjectCodeNotice');
+    if (!notice) return;
+    
+    if (localStorage.getItem('gtuSubjectCodeNoticeDismissed') === 'true') {
+        notice.style.display = 'none';
+    }
+    
+    const dismissBtn = document.getElementById('dismissNoticeBtn');
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            notice.style.display = 'none';
+            localStorage.setItem('gtuSubjectCodeNoticeDismissed', 'true');
+        });
+    }
+}
+
 function setupEventListeners() {
     document.getElementById("pyqForm").addEventListener("submit", handleFormSubmit);
     document.getElementById("downloadBtn").addEventListener("click", handleDownloadZip);
@@ -304,10 +322,10 @@ async function handleFormSubmit(e) {
     if (!subjectCode) {
         return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code cannot be empty.", true);
     }
-    if (!/^\d+$/.test(subjectCode)) {
-        return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code must contain only numbers (e.g., 3150703).", true);
+    if (!/^[a-zA-Z0-9]+$/.test(subjectCode)) {
+        return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code must contain only letters and numbers (e.g., 3140702 or BE04000221).", true);
     }
-    if (subjectCode.length < 5 || subjectCode.length > 10) {
+    if (subjectCode.length < 4 || subjectCode.length > 15) {
         return showError("⚠️ <strong>Please enter a valid GTU subject code.</strong> Subject code length is invalid.", true);
     }
     
