@@ -1,23 +1,26 @@
 import { Router } from "express";
+import { getAllCodesForSubject } from "../../config/subjectAliases.js";
 
 const router = Router();
 const GTU_BASE_URL = "https://gtu.ac.in/uploads";
 
 /**
  * Purpose: Generates a list of all mathematically possible GTU paper URLs based on the given parameters.
- * Input: subjectCode (String), course (String), startYear (Number), endYear (Number), sessions (Array of Strings)
+ * Input: subjectCodes (Array of Strings), course (String), startYear (Number), endYear (Number), sessions (Array of Strings)
  * Output: Array of URL strings
- * Example: generateUrls("315", "BE", 2021, 2021, ["W"]) -> ["https://gtu.ac.in/uploads/W2021/BE/315.pdf"]
+ * Example: generateUrls(["315"], "BE", 2021, 2021, ["W"]) -> ["https://gtu.ac.in/uploads/W2021/BE/315.pdf"]
  */
-function generateUrls(subjectCode, course, startYear, endYear, sessions) {
-  const urls = [];
-  for (let year = startYear; year <= endYear; year++) {
-    for (const session of sessions) {
-      const sessionPrefix = session.toUpperCase().startsWith("W") ? "W" : "S";
-      urls.push(`${GTU_BASE_URL}/${sessionPrefix}${year}/${course}/${subjectCode}.pdf`);
+function generateUrls(subjectCodes, course, startYear, endYear, sessions) {
+  const urls = new Set();
+  for (const subjectCode of subjectCodes) {
+    for (let year = startYear; year <= endYear; year++) {
+      for (const session of sessions) {
+        const sessionPrefix = session.toUpperCase().startsWith("W") ? "W" : "S";
+        urls.add(`${GTU_BASE_URL}/${sessionPrefix}${year}/${course}/${subjectCode}.pdf`);
+      }
     }
   }
-  return urls;
+  return Array.from(urls);
 }
 
 /**
@@ -54,8 +57,9 @@ router.post("/pyq/check", async (req, res) => {
 
   const { subjectCode, course, startYear, endYear, sessions } = req.body;
 
-  const urls = generateUrls(subjectCode, course, startYear, endYear, sessions);
-  console.log("Generated PYQ candidate URLs:", { subjectCode, course, startYear, endYear, sessions, totalUrls: urls.length });
+  const subjectCodes = getAllCodesForSubject(subjectCode);
+  const urls = generateUrls(subjectCodes, course, startYear, endYear, sessions);
+  console.log("Generated PYQ candidate URLs:", { originalCode: subjectCode, codesSearched: subjectCodes, course, startYear, endYear, sessions, totalUrls: urls.length });
 
   res.json({
     availableUrls: urls,
